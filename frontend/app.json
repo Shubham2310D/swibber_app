@@ -1,0 +1,115 @@
+{
+  "expo": {
+    "name": "Swibber",
+    "slug": "swibber",
+    "scheme": "swibber",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF8C00"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.swibber.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Swibber needs your location to show nearby services",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Swibber needs your location for ride tracking",
+        "NSCameraUsageDescription": "Swibber needs camera access for profile photo",
+        "NSPhotoLibraryUsageDescription": "Swibber needs photo library access for profile photo",
+        "NSMicrophoneUsageDescription": "Swibber needs microphone for voice features",
+        "NSContactsUsageDescription": "Swibber needs contacts to find friends"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF8C00"
+      },
+      "package": "com.swibber.app",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "VIBRATE",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            {
+              "scheme": "swibber"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Swibber needs your location to show nearby services and track rides."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#4C35E8",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Swibber needs access to your photos for your profile picture.",
+          "cameraPermission": "Swibber needs camera access to take a profile photo."
+        }
+      ],
+      [
+        "expo-secure-store"
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Swibber needs microphone access for voice features."
+        }
+      ],
+      "expo-updates",
+      [
+        "expo-apple-authentication"
+      ],
+      "@react-native-google-signin/google-signin",
+      "@maplibre/maplibre-react-native"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "swibber-app"
+      }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/swibber-app"
+    },
+    "runtimeVersion": "1.0.0"
+  }
+}
