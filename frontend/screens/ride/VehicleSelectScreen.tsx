@@ -23,7 +23,7 @@ import Header from '../../components/common/Header';
 import VehicleCard from '../../components/ride/VehicleCard';
 import Button from '../../components/common/Button';
 import { ListSkeleton } from '../../components/common/SkeletonLoader';
-import { useRideEstimates, useCreateRide } from '../../hooks/useRideQuery';
+import { useRideEstimates, useCreateRide, useCancelRide } from '../../hooks/useRideQuery';
 import { usePayment } from '../../hooks/usePayment';
 import type { FareBreakdown } from '../../services/rideService';
 
@@ -59,6 +59,7 @@ export default function VehicleSelectScreen() {
   );
 
   const createRide = useCreateRide();
+  const cancelRide = useCancelRide();
   const { openPayment, isLoading: paymentLoading } = usePayment();
 
   const requiresOnlinePayment = paymentMethod === PaymentMethodEnum.RAZORPAY;
@@ -129,8 +130,15 @@ export default function VehicleSelectScreen() {
               entityId:    data.rideId,
               amount:      selectedVehicle.fare,
               description: `${formatAddress(params.pickup)} → ${formatAddress(params.destination)}`,
-              onSuccess:   () => navigation.navigate('DriverMatching', { rideId: data.rideId }),
-              onFailure:   () => navigation.navigate('DriverMatching', { rideId: data.rideId }),
+              onSuccess: () => navigation.navigate('DriverMatching', { rideId: data.rideId }),
+              onFailure: () => {
+                cancelRide.mutate({ rideId: data.rideId, reason: 'payment_failed' });
+                showDialog({
+                  title:   'Payment Failed',
+                  message: 'Your ride booking was cancelled. Please try again.',
+                  type:    'error',
+                });
+              },
             });
           } else {
             navigation.navigate('DriverMatching', { rideId: data.rideId });
@@ -145,7 +153,7 @@ export default function VehicleSelectScreen() {
         },
       },
     );
-  }, [selected, selectedVehicle, hasCoords, params, paymentMethod, navigation, createRide, openPayment, requiresOnlinePayment]);
+  }, [selected, selectedVehicle, hasCoords, params, paymentMethod, navigation, createRide, cancelRide, openPayment, requiresOnlinePayment, showDialog]);
 
   const surgeLevel = selectedBreakdown?.surgeLevel ?? (vehicles[0]?.surgeLevel ?? SurgeLevelEnum.NONE);
   const surgeConfig = surgeLevelConfigs[surgeLevel as keyof typeof surgeLevelConfigs] ?? surgeLevelConfigs[SurgeLevelEnum.NONE];
@@ -399,7 +407,7 @@ export default function VehicleSelectScreen() {
         )}
         <Button
           label={
-            createRide.isPending || paymentLoading
+            createRide.isPending || paymentLoading || cancelRide.isPending
               ? 'Processing…'
               : selected
               ? requiresOnlinePayment
@@ -408,8 +416,8 @@ export default function VehicleSelectScreen() {
               : 'Select a Ride'
           }
           onPress={handleConfirm}
-          isDisabled={!selected || createRide.isPending || paymentLoading}
-          isLoading={createRide.isPending || paymentLoading}
+          isDisabled={!selected || createRide.isPending || paymentLoading || cancelRide.isPending}
+          isLoading={createRide.isPending || paymentLoading || cancelRide.isPending}
         />
       </View>
     </View>

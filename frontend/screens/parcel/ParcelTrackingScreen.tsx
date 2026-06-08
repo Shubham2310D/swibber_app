@@ -298,7 +298,13 @@ export default function ParcelTrackingScreen() {
       type:    'confirm',
       buttons: [
         { text: 'No', style: 'cancel' },
-        { text: 'Yes, Cancel', style: 'destructive', onPress: () => cancelParcel(params.parcelId) },
+        {
+          text:    'Yes, Cancel',
+          style:   'destructive',
+          onPress: () => cancelParcel(params.parcelId, {
+            onSuccess: () => navigation.popToTop(),
+          }),
+        },
       ],
     });
   }, [cancelParcel, params.parcelId, showDialog]);

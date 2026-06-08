@@ -190,9 +190,10 @@ export default function DriverMatchingScreen() {
   const { showDialog } = useDialog();
 
   const { rideStatus, rideData, driverLocation, etaUpdate, isLoading } = useRideTracking(params.rideId);
-  const cancelRide = useCancelRide();
-  const cameraRef  = useRef<CameraRef>(null);
-  const qc         = useQueryClient();
+  const cancelRide      = useCancelRide();
+  const cameraRef       = useRef<CameraRef>(null);
+  const qc              = useQueryClient();
+  const userCancelledRef = useRef(false);
 
   const cardOpacity = useSharedValue(0);
   const cardY       = useSharedValue(40);
@@ -266,7 +267,7 @@ export default function DriverMatchingScreen() {
     if (rideStatus === RideStatusEnum.DRIVER_ARRIVING || rideStatus === RideStatusEnum.DRIVER_ARRIVED || rideStatus === RideStatusEnum.IN_PROGRESS) {
       navigation.replace('LiveTracking', { rideId: params.rideId });
     }
-    if (isCancelled) {
+    if (isCancelled && !userCancelledRef.current) {
       qc.invalidateQueries({ queryKey: ['active-ride-check'] });
       showDialog({
         title:   'Ride Cancelled',
@@ -295,6 +296,7 @@ export default function DriverMatchingScreen() {
 
   async function performCancel() {
     if (!selectedReason) return;
+    userCancelledRef.current = true;
     setCancelling(true);
     cancelRide.mutate(
       { rideId: params.rideId, reason: selectedReason },

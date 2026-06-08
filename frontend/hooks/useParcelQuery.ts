@@ -65,5 +65,6 @@ export const useCancelParcel = () => {
       qc.invalidateQueries({ queryKey: ['active-parcel-check'] });
       showToast({ type: 'info', message: 'Parcel cancelled' });
     },
+    onError: () => showToast({ type: 'error', message: 'Failed to cancel parcel. Please try again.' }),
   });
 };

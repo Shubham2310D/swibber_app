@@ -14,7 +14,7 @@ import { generateId } from '../../utils/helpers';
 import { formatCurrency } from '../../utils/formatters';
 import Header from '../../components/common/Header';
 import Button from '../../components/common/Button';
-import { useParcelEstimate, useCreateParcel } from '../../hooks/useParcelQuery';
+import { useParcelEstimate, useCreateParcel, useCancelParcel } from '../../hooks/useParcelQuery';
 import { usePayment } from '../../hooks/usePayment';
 
 type DetailsNav   = StackNavigationProp<ParcelStackParamList, 'ParcelDetails'>;
@@ -80,6 +80,7 @@ export default function ParcelDetailsScreen() {
 
   const { data: estimateData } = useParcelEstimate(estimateParams);
   const createParcel = useCreateParcel();
+  const cancelParcel = useCancelParcel();
 
   const vehicleOptions = estimateData?.vehicleOptions ?? [];
   const activeVehicle  = vehicleOptions.find((v) => v.isCompatible) ?? vehicleOptions[0];
@@ -145,8 +146,15 @@ export default function ParcelDetailsScreen() {
                 entityId:    data.parcelId,
                 amount:      displayFare,
                 description: `Parcel delivery · ${packageTypeConfigs[packageType]?.label}`,
-                onSuccess:   () => goToMatching(),
-                onFailure:   () => showDialog({ title: 'Payment Failed', message: 'Your parcel booking was created but payment failed. Please retry from Activity.', type: 'error' }),
+                onSuccess: () => goToMatching(),
+                onFailure: () => {
+                  cancelParcel.mutate(data.parcelId);
+                  showDialog({
+                    title:   'Payment Failed',
+                    message: 'Your booking was cancelled. Please try again.',
+                    type:    'error',
+                  });
+                },
               });
             } else {
               goToMatching();
@@ -171,7 +179,7 @@ export default function ParcelDetailsScreen() {
   };
 
   const packageTypes = Object.entries(packageTypeConfigs);
-  const isBusy = createParcel.isPending || paymentLoading;
+  const isBusy = createParcel.isPending || paymentLoading || cancelParcel.isPending;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

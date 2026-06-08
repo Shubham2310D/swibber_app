@@ -75,8 +75,8 @@ export function usePayment() {
         showToast({ type: 'info', message: 'Payment cancelled' });
       } else {
         showToast({ type: 'error', message });
-        params.onFailure?.(err);
       }
+      params.onFailure?.(err);
     } finally {
       setIsLoading(false);
     }
