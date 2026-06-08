@@ -286,7 +286,8 @@ export const cancelRide = async (
 
     const now = new Date();
     ride.status             = RideStatusEnum.CANCELLED;
-    ride.cancellationReason = req.body.reason ?? 'user_cancelled';
+    ride.cancellationReason = 'user_cancelled';
+    ride.cancellationNote   = req.body.reason;
     ride.cancelledBy        = 'user';
     ride.cancelledAt        = now;
     ride.cancellationFee    = cancellationFee;

@@ -216,7 +216,8 @@ export const registerRideHandlers = (
         { _id: data.rideId, status: { $ne: RideStatusEnum.CANCELLED } },
         {
           status:             RideStatusEnum.CANCELLED,
-          cancellationReason: data.reason ?? 'User cancelled',
+          cancellationReason: 'user_cancelled',
+          cancellationNote:   data.reason,
           cancelledBy:        CancelledByEnum.USER,
           ...pushHistory(RideStatusEnum.CANCELLED, 'user', data.reason ?? undefined),
         },

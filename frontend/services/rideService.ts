@@ -21,6 +21,7 @@ export interface FareBreakdown {
   timeFare: number;
   waitingFare: number;
   nightChargeAmount: number;
+  surgeAmount: number;
   surgeMultiplier: number;
   surgeLabel: string;
   surgeLevel: SurgeLevel;

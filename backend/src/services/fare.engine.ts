@@ -81,6 +81,7 @@ export interface FareBreakdown {
   timeFare: number;
   waitingFare: number;
   nightChargeAmount: number;
+  surgeAmount: number;
   surgeMultiplier: number;
   surgeLabel: string;
   surgeLevel: SurgeLevel;
@@ -219,26 +220,32 @@ const computeVehicleFare = (
     ? { ...surge, multiplier: 1.0, label: 'Surge Protected', surgeLevel: SurgeLevelEnum.NONE }
     : surge;
 
-  const baseFare      = v.baseFare;
-  const distanceFare  = distanceKm * v.perKmRate;
-  const timeFare      = durationMin * v.perMinuteRate;
-  const waitingFare   = waitingMin * v.waitingChargePerMin;
+  const rBaseFare         = Math.round(v.baseFare);
+  const rDistanceFare     = Math.round(distanceKm * v.perKmRate);
+  const rTimeFare         = Math.round(durationMin * v.perMinuteRate);
+  const rWaitingFare      = Math.round(waitingMin * v.waitingChargePerMin);
 
   // Night charge applies to base + distance + time (not waiting or surge)
-  const nightChargeAmount = effectiveSurge.isNight
-    ? (baseFare + distanceFare + timeFare) * (v.nightMultiplier - 1)
+  const rNightChargeAmount = effectiveSurge.isNight
+    ? Math.round((rBaseFare + rDistanceFare + rTimeFare) * (v.nightMultiplier - 1))
     : 0;
 
-  let subtotal = (baseFare + distanceFare + timeFare + waitingFare + nightChargeAmount) * effectiveSurge.multiplier;
+  const preSurgeSum = rBaseFare + rDistanceFare + rTimeFare + rWaitingFare + rNightChargeAmount;
+
+  // Round subtotal to an integer immediately so all downstream arithmetic is exact
+  let subtotal = Math.round(preSurgeSum * effectiveSurge.multiplier);
 
   const minimumFareApplied = subtotal < v.minimumFare;
   if (minimumFareApplied) subtotal = v.minimumFare;
 
+  // surgeAmount is the extra charge from surge; 0 when minimum fare overrides
+  const surgeAmount = minimumFareApplied ? 0 : subtotal - preSurgeSum;
+
+  // All three are integers → preTierFare is exact (no Math.ceil rounding gap)
   const platformFee = Math.round(subtotal * ((config.platformFeePercent ?? 0) / 100));
   const gst         = Math.round((subtotal + platformFee) * ((config.gstPercent ?? 0) / 100));
-  const preTierFare = Math.ceil(subtotal + platformFee + gst);
+  const preTierFare = subtotal + platformFee + gst;
 
-  // Apply member cashback as an upfront discount
   const cashbackRate =
     membershipTier === 'platinum' ? 0.20 :
     membershipTier === 'gold'     ? 0.15 :
@@ -253,15 +260,16 @@ const computeVehicleFare = (
     vehicleType:         v.vehicleType,
     alias:               v.alias,
     capacity:            v.capacity,
-    baseFare:            Math.round(baseFare),
-    distanceFare:        Math.round(distanceFare),
-    timeFare:            Math.round(timeFare),
-    waitingFare:         Math.round(waitingFare),
-    nightChargeAmount:   Math.round(nightChargeAmount),
+    baseFare:            rBaseFare,
+    distanceFare:        rDistanceFare,
+    timeFare:            rTimeFare,
+    waitingFare:         rWaitingFare,
+    nightChargeAmount:   rNightChargeAmount,
+    surgeAmount,
     surgeMultiplier:     effectiveSurge.multiplier,
     surgeLabel:          effectiveSurge.label,
     surgeLevel:          effectiveSurge.surgeLevel,
-    subtotal:            Math.round(subtotal),
+    subtotal,
     platformFee,
     gst,
     totalFare,

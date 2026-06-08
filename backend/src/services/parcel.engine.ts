@@ -152,30 +152,31 @@ const computeParcelFare = (
   const effectiveBase  = freeDelivery ? 0 : (config.baseFare ?? 40);
   const deliveryFeeWaived = freeDelivery;
 
-  const baseFare        = effectiveBase;
-  const distanceFare    = distanceKm * (config.perKmRate ?? 10);
-  const weightSurcharge = resolveWeightSurcharge(weightKg, config.weightTiers ?? []);
-  const fragileSurcharge = isFragile ? (config.fragileSurcharge ?? 30) : 0;
-  const multiStopUpcharge = extraStops * (config.multiStopSurchargePerStop ?? 20);
+  const rBaseFare         = Math.round(effectiveBase);
+  const rDistanceFare     = Math.round(distanceKm * (config.perKmRate ?? 10));
+  const rWeightSurcharge  = Math.round(resolveWeightSurcharge(weightKg, config.weightTiers ?? []));
+  const rFragileSurcharge = isFragile ? Math.round(config.fragileSurcharge ?? 30) : 0;
+  const rMultiStop        = Math.round(extraStops * (config.multiStopSurchargePerStop ?? 20));
 
-  let subtotal = baseFare + distanceFare + weightSurcharge + fragileSurcharge + multiStopUpcharge;
+  // Build subtotal step-by-step in integers to avoid float accumulation
+  let subtotal = rBaseFare + rDistanceFare + rWeightSurcharge + rFragileSurcharge + rMultiStop;
 
-  const inPeak  = isPeakHour(config);
-  const peakUpcharge = inPeak ? subtotal * ((config.peakMultiplier ?? 1.3) - 1) : 0;
-  subtotal += peakUpcharge;
+  const inPeak        = isPeakHour(config);
+  const rPeakUpcharge = inPeak ? Math.round(subtotal * ((config.peakMultiplier ?? 1.3) - 1)) : 0;
+  subtotal += rPeakUpcharge;
 
-  const expressUpcharge = isExpress ? subtotal * ((config.expressMultiplier ?? 1.5) - 1) : 0;
-  subtotal += expressUpcharge;
+  const rExpressUpcharge = isExpress ? Math.round(subtotal * ((config.expressMultiplier ?? 1.5) - 1)) : 0;
+  subtotal += rExpressUpcharge;
 
-  const minimumFare = freeDelivery ? 0 : (config.minimumFare ?? 40);
+  const minimumFare        = freeDelivery ? 0 : (config.minimumFare ?? 40);
   const minimumFareApplied = subtotal < minimumFare;
   if (minimumFareApplied) subtotal = minimumFare;
 
+  // All integers → preTierFare is exact (no Math.ceil rounding gap)
   const platformFee = Math.round(subtotal * ((config.platformFeePercent ?? 0) / 100));
   const gst         = Math.round((subtotal + platformFee) * ((config.gstPercent ?? 0) / 100));
-  const preTierFare = Math.ceil(subtotal + platformFee + gst);
+  const preTierFare = subtotal + platformFee + gst;
 
-  // Apply member cashback on remaining charges
   const cashbackRate =
     membershipTier === 'platinum' ? 0.20 :
     membershipTier === 'gold'     ? 0.15 :
@@ -186,14 +187,14 @@ const computeParcelFare = (
   const etaMin = Math.ceil((distanceKm / 20) * 60) + (isExpress ? 0 : 10);
 
   return {
-    baseFare:           Math.round(baseFare),
-    distanceFare:       Math.round(distanceFare),
-    weightSurcharge:    Math.round(weightSurcharge),
-    fragileSurcharge:   Math.round(fragileSurcharge),
-    expressUpcharge:    Math.round(expressUpcharge),
-    peakUpcharge:       Math.round(peakUpcharge),
-    multiStopUpcharge:  Math.round(multiStopUpcharge),
-    subtotal:           Math.round(subtotal),
+    baseFare:           rBaseFare,
+    distanceFare:       rDistanceFare,
+    weightSurcharge:    rWeightSurcharge,
+    fragileSurcharge:   rFragileSurcharge,
+    expressUpcharge:    rExpressUpcharge,
+    peakUpcharge:       rPeakUpcharge,
+    multiStopUpcharge:  rMultiStop,
+    subtotal,
     platformFee,
     gst,
     totalFare,

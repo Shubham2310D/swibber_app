@@ -362,12 +362,12 @@ export default function ParcelDetailsScreen() {
         {fareBreakdown ? (
           <View style={[styles.breakdownCard, { backgroundColor: colors.card }]}>
             {[
-              { label: 'Base fare',        value: fareBreakdown.baseFare },
-              { label: 'Distance charge',  value: fareBreakdown.distanceFare },
+              { label: 'Base fare',                                              value: fareBreakdown.baseFare      },
+              { label: `Distance (${fareBreakdown.distanceKm.toFixed(1)} km)`,  value: fareBreakdown.distanceFare  },
               ...(fareBreakdown.weightSurcharge > 0  ? [{ label: 'Weight surcharge', value: fareBreakdown.weightSurcharge  }] : []),
               ...(fareBreakdown.fragileSurcharge > 0 ? [{ label: 'Fragile handling', value: fareBreakdown.fragileSurcharge }] : []),
-              ...(fareBreakdown.expressUpcharge > 0  ? [{ label: 'Express upcharge', value: fareBreakdown.expressUpcharge  }] : []),
               ...(fareBreakdown.peakUpcharge > 0     ? [{ label: 'Peak-time charge', value: fareBreakdown.peakUpcharge    }] : []),
+              ...(fareBreakdown.expressUpcharge > 0  ? [{ label: 'Express upcharge', value: fareBreakdown.expressUpcharge  }] : []),
               ...(fareBreakdown.platformFee > 0      ? [{ label: 'Platform fee',     value: fareBreakdown.platformFee     }] : []),
               ...(fareBreakdown.gst > 0              ? [{ label: 'GST (18%)',        value: fareBreakdown.gst             }] : []),
             ].map(({ label, value }) => (
@@ -376,6 +376,14 @@ export default function ParcelDetailsScreen() {
                 <Text style={[Typography.body, { color: colors.text }]}>{formatCurrency(value)}</Text>
               </View>
             ))}
+            {fareBreakdown.memberDiscountAmount > 0 && (
+              <View style={styles.breakdownRow}>
+                <Text style={[Typography.body, { color: Colors.success }]}>Member discount</Text>
+                <Text style={[Typography.body, { color: Colors.success }]}>
+                  -{formatCurrency(fareBreakdown.memberDiscountAmount)}
+                </Text>
+              </View>
+            )}
             <View style={[styles.breakdownDivider, { borderColor: colors.border }]} />
             <View style={styles.breakdownRow}>
               <Text style={[Typography.label, { color: colors.text }]}>Total</Text>

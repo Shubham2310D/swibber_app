@@ -43,6 +43,7 @@ export interface IRide extends Document {
   startedAt?: Date;
   completedAt?: Date;
   cancellationReason?: string;
+  cancellationNote?: string;
   cancelledBy?: CancelledBy;
   cancelledAt?: Date;
   cancellationFee: number;
@@ -94,6 +95,7 @@ const RideSchema = new Schema<IRide>(
       type: String,
       enum: ['user_cancelled', 'driver_cancelled', 'driver_not_found', 'timeout', 'payment_failed', 'system_cancelled', 'other'],
     },
+    cancellationNote: { type: String },
     cancelledBy:    { type: String, enum: Object.values(CancelledByEnum) },
     cancelledAt:    Date,
     cancellationFee: { type: Number, default: 0 },

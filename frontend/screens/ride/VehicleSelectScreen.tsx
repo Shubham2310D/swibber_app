@@ -265,17 +265,23 @@ export default function VehicleSelectScreen() {
               FARE BREAKDOWN
             </Text>
             {[
-              { label: 'Base fare',      value: selectedBreakdown.baseFare },
-              { label: 'Distance',       value: selectedBreakdown.distanceFare },
-              { label: 'Time',           value: selectedBreakdown.timeFare },
+              { label: 'Base fare',                                          value: selectedBreakdown.baseFare },
+              { label: `Distance (${selectedBreakdown.distanceKm.toFixed(1)} km)`, value: selectedBreakdown.distanceFare },
+              { label: `Time (${selectedBreakdown.durationMin} min)`,        value: selectedBreakdown.timeFare },
+              ...(selectedBreakdown.waitingFare > 0
+                ? [{ label: 'Waiting charge', value: selectedBreakdown.waitingFare }]
+                : []),
               ...(selectedBreakdown.nightChargeAmount > 0
-                ? [{ label: 'Night charge', value: selectedBreakdown.nightChargeAmount }]
+                ? [{ label: 'Night charge',   value: selectedBreakdown.nightChargeAmount }]
+                : []),
+              ...(selectedBreakdown.surgeAmount > 0
+                ? [{ label: `Surge (${selectedBreakdown.surgeMultiplier.toFixed(1)}x)`, value: selectedBreakdown.surgeAmount }]
                 : []),
               ...(selectedBreakdown.platformFee > 0
-                ? [{ label: 'Platform fee', value: selectedBreakdown.platformFee }]
+                ? [{ label: 'Platform fee',   value: selectedBreakdown.platformFee }]
                 : []),
               ...(selectedBreakdown.gst > 0
-                ? [{ label: 'GST',          value: selectedBreakdown.gst }]
+                ? [{ label: 'GST',            value: selectedBreakdown.gst }]
                 : []),
             ].map(({ label, value }) => (
               <View key={label} style={styles.breakdownRow}>
@@ -283,6 +289,14 @@ export default function VehicleSelectScreen() {
                 <Text style={[Typography.body, { color: colors.text }]}>{formatCurrency(value)}</Text>
               </View>
             ))}
+            {selectedBreakdown.memberDiscountAmount > 0 && (
+              <View style={styles.breakdownRow}>
+                <Text style={[Typography.body, { color: Colors.success }]}>Member discount</Text>
+                <Text style={[Typography.body, { color: Colors.success }]}>
+                  -{formatCurrency(selectedBreakdown.memberDiscountAmount)}
+                </Text>
+              </View>
+            )}
             <View style={[styles.breakdownDivider, { borderColor: colors.border }]} />
             <View style={styles.breakdownRow}>
               <Text style={[Typography.label, { color: colors.text }]}>Total</Text>
