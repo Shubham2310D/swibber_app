@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Restaurant } from '../models/Restaurant';
 import { Coupon } from '../models/Coupon';
 import { AuthConfig, DEFAULT_AUTH_PROVIDERS } from '../models/AuthConfig';
+import { AppConfig } from '../models/AppConfig';
 import { FareConfig } from '../models/FareConfig';
 import { ParcelFareConfig } from '../models/ParcelFareConfig';
 import { loadFareConfig, invalidateFareCache } from '../services/fare.engine';
@@ -14,12 +15,20 @@ import {
 
 // ─── App Config ──────────────────────────────────────────────────────────────
 
-export const getAppConfig = (_req: Request, res: Response, next: NextFunction): void => {
+export const getAppConfig = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const existing = await AppConfig.findOne().lean();
+    const vc = existing ?? await AppConfig.create({});
+
     res.json({
       success: true,
       data: {
-        version:         '1.0.0',
+        version:         vc.latestVersion,
+        minVersion:      vc.minVersion,
+        latestVersion:   vc.latestVersion,
+        apkDownloadUrl:  vc.apkDownloadUrl,
+        androidStoreUrl: vc.androidStoreUrl,
+        iosStoreUrl:     vc.iosStoreUrl,
         maintenanceMode: false,
         features:        { food: true, parcel: true, ride: true, wallet: true },
         currency:        { symbol: '₹', code: 'INR' },
@@ -28,6 +37,31 @@ export const getAppConfig = (_req: Request, res: Response, next: NextFunction): 
         supportEmail:    'support@swibber.com',
       },
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateAppVersionConfig = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { minVersion, latestVersion, apkDownloadUrl, androidStoreUrl, iosStoreUrl } = req.body;
+
+    const updated = await AppConfig.findOneAndUpdate(
+      {},
+      { ...(minVersion      && { minVersion }),
+        ...(latestVersion   && { latestVersion }),
+        ...(apkDownloadUrl  !== undefined && { apkDownloadUrl }),
+        ...(androidStoreUrl && { androidStoreUrl }),
+        ...(iosStoreUrl     && { iosStoreUrl }),
+      },
+      { upsert: true, new: true, runValidators: true },
+    );
+
+    res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
   }

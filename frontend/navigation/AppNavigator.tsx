@@ -9,7 +9,26 @@ import { StorageService } from '../services/storageService';
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import ForceUpdateScreen from '../screens/ForceUpdateScreen';
 import { Colors } from '../theme';
+import { apiClient } from '../api/client';
+import { Endpoints } from '../api/endpoints';
+import { Config } from '../constants/config';
+
+// Returns true if `current` is strictly older than `minimum` (semver)
+function isVersionBehind(current: string, minimum: string): boolean {
+  const parse = (v: string) => v.split('.').map(Number);
+  const [cMaj, cMin, cPat] = parse(current);
+  const [mMaj, mMin, mPat] = parse(minimum);
+  if (cMaj !== mMaj) return cMaj < mMaj;
+  if (cMin !== mMin) return cMin < mMin;
+  return cPat < mPat;
+}
+
+interface VersionState {
+  required: boolean;
+  apkUrl:   string;
+}
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -29,16 +48,37 @@ function BootstrapLoader() {
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const [versionState, setVersionState] = useState<VersionState | null>(null);
 
   useEffect(() => {
-    StorageService.isOnboardingDone().then(setOnboardingDone);
+    const checkVersion = async (): Promise<VersionState> => {
+      try {
+        const { data } = await apiClient.get(Endpoints.APP_CONFIG);
+        const { minVersion, apkDownloadUrl } = data.data;
+        return { required: isVersionBehind(Config.APP_VERSION, minVersion), apkUrl: apkDownloadUrl ?? '' };
+      } catch {
+        return { required: false, apkUrl: '' }; // fail open on network error
+      }
+    };
+
+    Promise.all([
+      StorageService.isOnboardingDone(),
+      checkVersion(),
+    ]).then(([done, version]) => {
+      setOnboardingDone(done);
+      setVersionState(version);
+    });
   }, []);
 
-  // While auth is bootstrapping or onboarding flag is unknown — show loader.
-  // This prevents a flash of the wrong screen.
-  if (isLoading || onboardingDone === null) {
+  // Wait for auth bootstrap, onboarding flag, and version check before rendering
+  if (isLoading || onboardingDone === null || versionState === null) {
     console.log('[AUTH] Bootstrapping — waiting for auth state and onboarding flag');
     return <BootstrapLoader />;
+  }
+
+  // Block access entirely if the installed version is below the minimum
+  if (versionState.required) {
+    return <ForceUpdateScreen apkUrl={versionState.apkUrl} />;
   }
 
   console.log('[AUTH] Bootstrap complete — isAuthenticated:', isAuthenticated, '| onboardingDone:', onboardingDone);
