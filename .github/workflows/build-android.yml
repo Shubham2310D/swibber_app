@@ -1,10 +1,13 @@
 name: Build & Release Android APK
 
-# Triggers when you push a version tag — e.g. git tag v1.1.0 && git push origin v1.1.0
 on:
   push:
     tags:
       - 'v*'
+
+# Required for creating GitHub Releases and uploading assets
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -21,22 +24,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          node-version: 22
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      # Authenticates with Expo using the EXPO_TOKEN secret you add in GitHub
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      # Builds the APK in EAS cloud (handles signing automatically)
-      # --output downloads the finished APK to this runner
       - name: Build APK
         run: |
           eas build \
@@ -45,10 +43,10 @@ jobs:
             --non-interactive \
             --output ./swibber-${{ github.ref_name }}.apk
 
-      # Creates a GitHub Release and attaches the APK as a downloadable asset
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Swibber ${{ github.ref_name }}
           generate_release_notes: true
           files: frontend/swibber-${{ github.ref_name }}.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
