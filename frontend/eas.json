@@ -7,6 +7,10 @@
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://swibber-app-gf3u.onrender.com/api/v1",
+        "EXPO_PUBLIC_WS_URL": "https://swibber-app-gf3u.onrender.com"
       }
     },
     "preview": {
