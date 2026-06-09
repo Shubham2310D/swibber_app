@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "807384500418",
+    "project_id": "swibber-app-8e1e2",
+    "storage_bucket": "swibber-app-8e1e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807384500418:android:d3f4087b68181fe936135b",
+        "android_client_info": {
+          "package_name": "com.swibber.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "807384500418-bpl3e81hlu1qlq8bqr1ndfnssq4ohpu6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swibber.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "807384500418-3008blpv7ajn2u0d06g1ik7nlu1vg64a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZzFOMa4Tgn1HaIXVTHBY6PuMkfPQLSEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "807384500418-3008blpv7ajn2u0d06g1ik7nlu1vg64a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

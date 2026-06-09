@@ -49,7 +49,6 @@ payment.secrets.*
 *.mobileprovision
 *.certSigningRequest
 *.p8
-google-services.json          # prod variant — keep only the template if used
 GoogleService-Info.plist      # prod variant — keep only the template if used
 
 
@@ -117,7 +116,7 @@ frontend/android/local.properties
 frontend/android/.idea/
 frontend/android/captures/
 frontend/android/release/
-frontend/google-services.json
+# frontend/google-services.json — intentionally tracked for EAS cloud builds
 
 # Generated asset files
 frontend/android/app/src/main/assets/index.android.bundle
