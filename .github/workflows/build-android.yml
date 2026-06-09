@@ -5,7 +5,6 @@ on:
     tags:
       - 'v*'
 
-# Required for creating GitHub Releases and uploading assets
 permissions:
   contents: write
 
@@ -35,13 +34,22 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      # Cloud build — JSON output goes to stdout, logs to stderr
       - name: Build APK
         run: |
           eas build \
             --platform android \
             --profile production \
             --non-interactive \
-            --output ./swibber-${{ github.ref_name }}.apk
+            --json \
+            2>eas_logs.txt > eas_output.json || (cat eas_logs.txt && exit 1)
+
+      # Parse the artifact URL from the JSON and download the APK
+      - name: Download APK
+        run: |
+          BUILD_URL=$(jq -r '.[0].artifacts.buildUrl' eas_output.json)
+          echo "Build URL: $BUILD_URL"
+          curl -L "$BUILD_URL" -o swibber-${{ github.ref_name }}.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
