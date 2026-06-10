@@ -2,8 +2,7 @@ name: Build & Release Android APK
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
 
 permissions:
   contents: write
@@ -17,42 +16,53 @@ jobs:
         working-directory: frontend
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
 
       - name: Install dependencies
         run: npm install
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
+      - uses: actions/setup-java@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          java-version: '17'
+          distribution: 'temurin'
 
-      # Cloud build — JSON output goes to stdout, logs to stderr
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install
+        env:
+          CI: '1'
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > android/app/release.keystore
+
       - name: Build APK
         run: |
-          eas build \
-            --platform android \
-            --profile production \
-            --non-interactive \
-            --json \
-            2>eas_logs.txt > eas_output.json || (cat eas_logs.txt && exit 1)
+          cd android && chmod +x gradlew
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/frontend/android/app/release.keystore \
+            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+        env:
+          EXPO_PUBLIC_API_BASE_URL: https://swibber-app-gf3u.onrender.com/api/v1
+          EXPO_PUBLIC_WS_URL: https://swibber-app-gf3u.onrender.com
 
-      # Parse the artifact URL from the JSON and download the APK
-      - name: Download APK
-        run: |
-          BUILD_URL=$(jq -r '.[0].artifacts.buildUrl' eas_output.json)
-          echo "Build URL: $BUILD_URL"
-          curl -L "$BUILD_URL" -o swibber-${{ github.ref_name }}.apk
+      - name: Rename APK
+        run: mv android/app/build/outputs/apk/release/app-release.apk swibber-${{ github.ref_name }}.apk
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
           name: Swibber ${{ github.ref_name }}
           generate_release_notes: true

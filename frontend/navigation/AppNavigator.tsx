@@ -54,11 +54,11 @@ function AppContent() {
   useEffect(() => {
     const checkVersion = async (): Promise<VersionState> => {
       try {
-        const { data } = await apiClient.get(Endpoints.APP_CONFIG);
+        const { data } = await apiClient.get(Endpoints.APP_CONFIG, { timeout: 8000 });
         const { minVersion, apkDownloadUrl } = data.data;
         return { required: isVersionBehind(Config.APP_VERSION, minVersion), apkUrl: apkDownloadUrl ?? '' };
       } catch {
-        return { required: false, apkUrl: '' }; // fail open on network error
+        return { required: false, apkUrl: '' };
       }
     };
 
@@ -71,13 +71,16 @@ function AppContent() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!isLoading && onboardingDone !== null && versionState !== null) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isLoading, onboardingDone, versionState]);
+
   // Wait for auth bootstrap, onboarding flag, and version check before rendering
   if (isLoading || onboardingDone === null || versionState === null) {
-    console.log('[AUTH] Bootstrapping — waiting for auth state and onboarding flag');
     return <BootstrapLoader />;
   }
-
-  SplashScreen.hideAsync().catch(() => {});
 
   // Block access entirely if the installed version is below the minimum
   if (versionState.required) {
