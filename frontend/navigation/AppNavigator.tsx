@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import type { RootStackParamList } from './types';
@@ -75,6 +76,8 @@ function AppContent() {
     console.log('[AUTH] Bootstrapping — waiting for auth state and onboarding flag');
     return <BootstrapLoader />;
   }
+
+  SplashScreen.hideAsync().catch(() => {});
 
   // Block access entirely if the installed version is below the minimum
   if (versionState.required) {
