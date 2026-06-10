@@ -54,6 +54,9 @@ jobs:
           jq --arg v "$VERSION" '.expo.version = $v' app.json > app.json.tmp && mv app.json.tmp app.json
           echo "Version set to $VERSION"
 
+      - name: Decode google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > google-services.json
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install
         env:

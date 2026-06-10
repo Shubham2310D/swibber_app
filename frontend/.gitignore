@@ -31,3 +31,5 @@ ios/
 .idea/
 .vscode/
 *.swp
+
+google-services.json
