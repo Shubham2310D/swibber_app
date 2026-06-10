@@ -97,7 +97,6 @@
           "microphonePermission": "Swibber needs microphone access for voice features."
         }
       ],
-      "expo-updates",
       [
         "expo-apple-authentication"
       ],
@@ -105,9 +104,8 @@
       "@maplibre/maplibre-react-native"
     ],
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "enabled": false
     },
-    "runtimeVersion": "1.0.0",
     "extra": {
       "eas": {
         "projectId": "4235967c-c11b-40b2-8db2-50f66dd2f24f"

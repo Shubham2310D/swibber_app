@@ -1,6 +1,8 @@
+import Constants from 'expo-constants';
+
 export const Config = {
   APP_NAME: 'Swibber',
-  APP_VERSION: '1.0.0',
+  APP_VERSION: Constants.expoConfig?.version ?? '1.0.0',
   API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:5000/api/v1',
   SOCKET_URL: process.env.EXPO_PUBLIC_WS_URL ?? 'http://localhost:5000',
   RAZORPAY_KEY_ID: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID ?? '',

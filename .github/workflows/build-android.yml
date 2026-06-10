@@ -48,6 +48,12 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
 
+      - name: Set version from tag
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          jq --arg v "$VERSION" '.expo.version = $v' app.json > app.json.tmp && mv app.json.tmp app.json
+          echo "Version set to $VERSION"
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install
         env:

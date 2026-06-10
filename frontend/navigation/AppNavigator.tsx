@@ -77,6 +77,12 @@ function AppContent() {
     }
   }, [isLoading, onboardingDone, versionState]);
 
+  // Hard fallback: force-hide splash after 10s regardless of state
+  useEffect(() => {
+    const timer = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Wait for auth bootstrap, onboarding flag, and version check before rendering
   if (isLoading || onboardingDone === null || versionState === null) {
     return <BootstrapLoader />;
