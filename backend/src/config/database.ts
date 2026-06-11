@@ -15,6 +15,19 @@ export const connectDatabase = async (): Promise<void> => {
     isConnected = true;
     console.log('[MongoDB] Connected successfully');
 
+    // One-time fix: drop the non-sparse phone_1 index so Mongoose recreates it as sparse+unique
+    try {
+      const usersCol = mongoose.connection.db!.collection('users');
+      const indexes = await usersCol.indexes();
+      const phoneIdx = indexes.find((i: any) => i.name === 'phone_1');
+      if (phoneIdx && !phoneIdx.sparse) {
+        await usersCol.dropIndex('phone_1');
+        console.log('[MongoDB] Dropped non-sparse phone_1 index — will be recreated as sparse+unique');
+      }
+    } catch {
+      // Collection may not exist yet on first run — safe to ignore
+    }
+
     mongoose.connection.on('error', (err) => console.error('[MongoDB] Error:', err));
     mongoose.connection.on('disconnected', () => {
       isConnected = false;
