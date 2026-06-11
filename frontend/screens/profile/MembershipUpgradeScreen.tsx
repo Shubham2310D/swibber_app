@@ -51,6 +51,11 @@ export default function MembershipUpgradeScreen() {
     const cfg = membershipTierConfigs[tier];
     if (!cfg.monthlyPrice) return;
 
+    if (!Config.RAZORPAY_KEY_ID) {
+      showDialog({ title: 'Unavailable', message: 'Payments are not configured. Please try again later.', type: 'error' });
+      return;
+    }
+
     setLoadingTier(tier);
     try {
       const order = await PaymentService.createMembershipOrder(tier, cfg.monthlyPrice);
