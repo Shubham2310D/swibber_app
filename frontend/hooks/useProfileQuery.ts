@@ -27,7 +27,10 @@ export const useUpdateProfile = () => {
       qc.invalidateQueries({ queryKey: ['user-profile'] });
       showToast({ type: 'success', message: 'Profile updated' });
     },
-    onError: () => showToast({ type: 'error', message: 'Failed to update profile' }),
+    onError: (err: any) => {
+      const message = err?.response?.data?.message ?? 'Failed to update profile';
+      showToast({ type: 'error', message });
+    },
   });
 };
 

@@ -37,14 +37,18 @@ export default function EditProfileScreen() {
   const isValid = Validators.isValidName(name) && (email === '' || Validators.isValidEmail(email));
 
   const handleSave = async () => {
-    await updateProfile.mutateAsync({
-      name,
-      email:  email  || undefined,
-      phone:  phone  ? `+91 ${phone}` : undefined,
-      gender: gender || undefined,
-    });
-    setSaved(true);
-    setTimeout(() => navigation.goBack(), 800);
+    try {
+      await updateProfile.mutateAsync({
+        name,
+        email:  email  || undefined,
+        phone:  phone  ? `+91 ${phone}` : undefined,
+        gender: gender || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => navigation.goBack(), 800);
+    } catch {
+      // Error message is surfaced by the mutation's onError toast
+    }
   };
 
   return (

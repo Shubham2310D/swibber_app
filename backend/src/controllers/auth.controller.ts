@@ -8,7 +8,7 @@ import { AuthProviderEnum } from '../types/enums';
 import type { AuthProvider, UserRole } from '../types/enums';
 import { getOrCreateWallet } from '../services/wallet.service';
 import { createNotification } from '../services/notification.service';
-import { AppError, UnauthorizedError } from '../utils/errors';
+import { AppError, UnauthorizedError, ConflictError } from '../utils/errors';
 import { getRedis } from '../config/redis';
 
 interface FirebaseAuthBody {
@@ -61,6 +61,15 @@ export const firebaseAuth = async (
       const resolvedEmail = email ?? decoded.email;
       const resolvedName = name ?? decoded.name ?? 'Swibber User';
 
+      if (phone) {
+        const phoneOwner = await User.findOne({ phone }).lean();
+        if (phoneOwner) {
+          next(new ConflictError('This phone number is already linked to another account'));
+          return;
+        }
+      }
+
+      try {
       user = await User.create({
         firebaseUid: decoded.uid,
         phone: phone || undefined,
@@ -75,6 +84,13 @@ export const firebaseAuth = async (
         googleId: detectedProvider === AuthProviderEnum.GOOGLE ? decoded.uid : undefined,
         appleId: detectedProvider === AuthProviderEnum.APPLE ? decoded.uid : undefined,
       });
+      } catch (createErr: any) {
+        if (createErr?.code === 11000 && createErr?.keyPattern?.phone) {
+          next(new ConflictError('This phone number is already linked to another account'));
+          return;
+        }
+        throw createErr;
+      }
       await getOrCreateWallet(user._id as unknown as string);
       createNotification({
         userId: user._id as unknown as string,

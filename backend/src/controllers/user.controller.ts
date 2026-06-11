@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { User } from '../models/User';
 import { uploadImage } from '../services/cloudinary.service';
-import { AppError } from '../utils/errors';
+import { AppError, ConflictError } from '../utils/errors';
 import { v4 as uuid } from 'uuid';
 import { MembershipTierEnum, membershipTierConfigs } from '../types/enums';
 
@@ -21,14 +21,24 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response, ne
     if (name)   update.name   = name;
     if (email)  update.email  = email;
     if (gender) update.gender = gender;
-    if (phone)  update.phone  = phone;
+    if (phone) {
+      const taken = await User.findOne({ phone, _id: { $ne: req.user!.id } }).lean();
+      if (taken) { next(new ConflictError('Phone number is already in use')); return; }
+      update.phone = phone;
+    }
     const user = await User.findByIdAndUpdate(
       req.user!.id,
       update,
       { new: true, runValidators: true },
     ).lean();
     res.json({ success: true, data: user });
-  } catch (err) { next(err); }
+  } catch (err: any) {
+    if (err?.code === 11000 && err?.keyPattern?.phone) {
+      next(new ConflictError('Phone number is already in use'));
+      return;
+    }
+    next(err);
+  }
 };
 
 export const uploadAvatar = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
