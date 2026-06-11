@@ -67,6 +67,33 @@ export const updateAppVersionConfig = async (
   }
 };
 
+// Called by GitHub Actions after each release — no JWT, just a shared secret
+export const webhookUpdateAppVersion = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const secret = req.headers['x-webhook-secret'];
+    if (!secret || secret !== process.env.INTERNAL_WEBHOOK_SECRET) {
+      res.status(401).json({ success: false, message: 'Unauthorized' });
+      return;
+    }
+
+    const { version, apkUrl } = req.body as { version?: string; apkUrl?: string };
+    if (!version) {
+      res.status(400).json({ success: false, message: 'version is required' });
+      return;
+    }
+
+    await AppConfig.findOneAndUpdate(
+      {},
+      { minVersion: version, latestVersion: version, ...(apkUrl && { apkDownloadUrl: apkUrl }) },
+      { upsert: true, new: true },
+    );
+
+    res.json({ success: true, message: `App version updated to ${version}` });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ─── Auth provider config ─────────────────────────────────────────────────────
 
 export const getAuthProviderConfig = async (

@@ -96,3 +96,14 @@ jobs:
           generate_release_notes: true
           files: frontend/swibber-${{ github.ref_name }}.apk
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify backend of new version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          APK_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/swibber-${{ github.ref_name }}.apk"
+          curl -s -f -X POST \
+            -H "Content-Type: application/json" \
+            -H "x-webhook-secret: ${{ secrets.INTERNAL_WEBHOOK_SECRET }}" \
+            -d "{\"version\": \"$VERSION\", \"apkUrl\": \"$APK_URL\"}" \
+            https://swibber-app-gf3u.onrender.com/api/v1/config/webhook/version \
+          && echo "Backend notified: v$VERSION" || echo "Warning: backend notify failed (non-fatal)"

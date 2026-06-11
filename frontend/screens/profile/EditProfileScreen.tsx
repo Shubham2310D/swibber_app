@@ -12,6 +12,7 @@ import Avatar from '../../components/common/Avatar';
 import { useAuth } from '../../hooks/useAuth';
 import { useUpdateProfile } from '../../hooks/useProfileQuery';
 import { useUserProfile } from '../../hooks/useProfileQuery';
+import { useDialog } from '../../context/DialogContext';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -19,6 +20,7 @@ export default function EditProfileScreen() {
   const { user: authUser } = useAuth();
   const { data: profile } = useUserProfile();
   const updateProfile = useUpdateProfile();
+  const { showDialog } = useDialog();
 
   const user = profile ?? authUser;
 
@@ -38,16 +40,20 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync({
-        name,
-        email:  email  || undefined,
-        phone:  phone  ? `+91 ${phone}` : undefined,
-        gender: gender || undefined,
-      });
+      await updateProfile.mutateAsync(
+        {
+          name,
+          email:  email  || undefined,
+          phone:  phone  ? `+91 ${phone}` : undefined,
+          gender: gender || undefined,
+        },
+        { onError: () => {} }, // suppress default toast — we show a dialog below
+      );
       setSaved(true);
       setTimeout(() => navigation.goBack(), 800);
-    } catch {
-      // Error message is surfaced by the mutation's onError toast
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? 'Failed to update profile. Please try again.';
+      showDialog({ title: 'Update Failed', message, type: 'error' });
     }
   };
 

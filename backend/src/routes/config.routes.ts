@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAppConfig,
   updateAppVersionConfig,
+  webhookUpdateAppVersion,
   getAuthProviderConfig,
   getPromotions,
   getFareConfig,
@@ -15,8 +16,9 @@ import { authenticate, requireRole } from '../middleware/auth';
 const router = Router();
 
 // Public / lightly-authenticated endpoints
-router.get('/app',          getAppConfig);
-router.put('/app/version',  authenticate, requireRole('admin'), updateAppVersionConfig);
+router.get('/app',              getAppConfig);
+router.put('/app/version',      authenticate, requireRole('admin'), updateAppVersionConfig);
+router.post('/webhook/version', webhookUpdateAppVersion);
 router.get('/auth',         getAuthProviderConfig);
 router.get('/promotions',   getPromotions);
 router.get('/enums',        getEnumConfig);
